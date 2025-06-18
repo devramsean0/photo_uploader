@@ -3,7 +3,7 @@ use serde_json::Result as SerdeResult;
 use std::fs::{create_dir_all, write, read_to_string};
 use dirs::config_dir;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
     pub base_url: String,
     pub api_key: String

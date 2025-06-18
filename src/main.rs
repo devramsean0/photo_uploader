@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 mod environment_config;
+mod immich;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -45,15 +46,7 @@ fn main() {
             }
         }
         Commands::Upload { directory, album_name, camera_model } => {
-            let mut env_config;
-            match environment_config::Config::load_from_file() {
-                Ok(config) => {
-                    env_config = config
-                }
-                Err(err) => println!("Error when loading the config: {err}")
-            }
-
-            
+            dbg!(immich::Immich::new().unwrap().user_id);
         }
     }
 }
