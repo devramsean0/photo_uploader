@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Result as SerdeResult;
-use std::fs::{create_dir_all, write, read_to_string};
+use std::fs::{write, read_to_string};
 use dirs::config_dir;
 
 #[derive(Serialize, Deserialize, Clone)]

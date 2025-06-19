@@ -1,6 +1,3 @@
-use clap::builder::TypedValueParser;
-use serde_json::json;
-
 use crate::environment_config;
 
 #[derive(Clone)]
@@ -13,7 +10,7 @@ pub struct Immich {
 
 impl Immich {
     pub fn new() -> Result<Immich, Box<dyn std::error::Error>> {
-        let mut env_config;
+        let env_config;
         match environment_config::Config::load_from_file() {
             Ok(config) => {
                 env_config = config
@@ -29,67 +26,25 @@ impl Immich {
             .get(format!("{}/users/me", env_config.clone().get().base_url))
             .header("x-api-key", env_config.clone().get().api_key)
             .send()?
-            .text()?;
+            .json::<serde_json::Value>()?;
 
-        let json_user_req: ImmichGetMyUserResponse = serde_json::from_str(user_req.as_str())?;
+        //let json_user_req: ImmichGetMyUserResponse = serde_json::from_str(user_req.as_str())?;
 
         Ok(Immich {
             client,
             env_config,
-            user_id: json_user_req.id.unwrap(),
+            user_id: user_req["id"].to_string(),
             album: None
         })
     }
 
     pub fn get_album(mut self, album_name: String) -> Self {
-        Album::new(self.clone(), album_name).unwrap();
+        self.album = Some(Album::new(self.clone(), album_name).unwrap());
 
         self
     }
 }
 
-
-// Users Type
-#[derive(serde::Deserialize)]
-struct ImmichGetMyUserResponse {
-    #[serde(rename = "avatarColor")]
-    avatar_color: Option<String>,
-    #[serde(rename = "createdAt")]
-    created_at: Option<String>,
-    #[serde(rename = "deletedAt")]
-    deleted_at: Option<String>,
-    email: Option<String>,   
-    id: Option<String>,
-    #[serde(rename = "isAdmin")]
-    is_admin: Option<bool>,
-    license: Option<ImmichLicenseObject>,
-    name: Option<String>,
-    #[serde(rename = "oauthId")]
-    oauth_id: Option<String>,
-    #[serde(rename = "profileChangedAt")]
-    proffile_changed_at: Option<String>,
-    #[serde(rename = "profileImagePath")]
-    profile_image_path: Option<String>,
-    #[serde(rename = "quotaSizeInBytes")]
-    quota_size_in_bytes: Option<i64>,
-    #[serde(rename = "quotaUsageInBytes")]
-    quota_usage_in_bytes: Option<i64>,
-    status: Option<String>,
-    #[serde(rename = "storageLabel")]
-    storage_label: Option<String>,
-    #[serde(rename = "updatedAt")]
-    updated_at: Option<String>,
-}
-
-#[derive(serde::Deserialize)]
-struct ImmichLicenseObject {
-    #[serde(rename = "activatedAt")]
-    activated_at: Option<String>,
-    #[serde(rename = "activationKey")]
-    activation_key: Option<String>,
-    #[serde(rename = "licenseKey")]
-    license_key: Option<String>,
-}
 
 #[derive(Clone)]
 pub struct Album {
@@ -104,12 +59,11 @@ impl Album {
             .get(format!("{}/albums", immich.env_config.clone().get().base_url))
             .header("x-api-key", immich.env_config.clone().get().api_key)
             .send()?
-            .text()?;
-        let json_album_req: Vec<serde_json::Value> = serde_json::from_str(album_req.as_str())?;
+            .json::<Vec<serde_json::Value>>()?;
         //dbg!(json_album_req);
         let mut album_id = "";
         let mut found_album: bool = false;
-        for album in json_album_req.iter() {
+        for album in album_req.iter() {
             //dbg!(album.get("albumName").unwrap().to_string());
             if album.get("albumName").unwrap().to_string() == format!("\"{}\"", album_name) {
                 found_album = true;
@@ -117,7 +71,7 @@ impl Album {
             }
         }
 
-        if (found_album) {
+        if found_album {
             println!("Found Album {} with ID: {}", album_name, album_id);
             Ok(Album {
                 name: album_name,
@@ -138,11 +92,11 @@ impl Album {
                 .header("x-api-key", immich.env_config.clone().get().api_key)
                 .json(&create_album_data)
                 .send()?
-                .text()?;
-
+                .json::<serde_json::Value>()?;
+        
             Ok(Album {
-                name: "".to_string(),
-                id: "".to_string()
+                name: album_name,
+                id: create_album_res["id"].to_string(),
             })
         }
     }
