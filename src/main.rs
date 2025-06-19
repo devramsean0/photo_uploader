@@ -48,7 +48,7 @@ fn main() {
         Commands::Upload { directory, album_name, camera_model } => {
             match immich::Immich::new() {
                 Ok(immich) => {
-                    dbg!(immich.user_id);
+                    dbg!(immich.clone().user_id);
                     immich.get_album(album_name);
                 }
                 Err(err) => {

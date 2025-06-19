@@ -1,7 +1,9 @@
+use clap::builder::TypedValueParser;
 use serde_json::json;
 
 use crate::environment_config;
 
+#[derive(Clone)]
 pub struct Immich {
     client: reqwest::blocking::Client,
     env_config: environment_config::Config,
@@ -40,7 +42,7 @@ impl Immich {
     }
 
     pub fn get_album(mut self, album_name: String) -> Self {
-        self.album = Album::new(self, album_name).unwrap();
+        Album::new(self.clone(), album_name).unwrap();
 
         self
     }
@@ -89,6 +91,7 @@ struct ImmichLicenseObject {
     license_key: Option<String>,
 }
 
+#[derive(Clone)]
 pub struct Album {
     id: String,
     name: String,
@@ -102,45 +105,46 @@ impl Album {
             .header("x-api-key", immich.env_config.clone().get().api_key)
             .send()?
             .text()?;
-        let json_album_req: serde_json::Value = serde_json::from_str(album_req.as_str())?;
-
-        let album_id= if let Some(albums_array) = json_album_req.as_array() {
-            if let Some(album_obj) = albums_array.iter().find(|a| {
-                a.get("albumName").and_then(|n| n.as_str()) == Some(album_name.as_str())
-            }) {
-                let id = album_obj["id"].as_str()
-                    .ok_or("FATAL: Album with no ID???")?;
-                println!("Found album");
-                id.to_string();
-            } else {
-                println!("Album not found, creating");
-                let create_json_body = serde_json::json!({
-                    "albumName": album_name,
-                    "albumUsers": [{
-                        "userId": immich.user_id,
-                        "role": "editor"
-                    }]
-                });
-
-                let create_req = immich.client
-                    .post(format!("{}/albums", immich.env_config.clone().get().base_url))
-                    .header("x-api-key", immich.env_config.clone().get().api_key)
-                    .send()?
-                    .text()?;
-                let json_create_req: serde_json::Value = serde_json::from_str(create_req.as_str())?;
-                let id = json_create_req["id"].as_str()
-                    .ok_or("FATAL: Failed to get ID of new album");
-                println!("Created new album :)");
-
-                id.to_string()
+        let json_album_req: Vec<serde_json::Value> = serde_json::from_str(album_req.as_str())?;
+        //dbg!(json_album_req);
+        let mut album_id = "";
+        let mut found_album: bool = false;
+        for album in json_album_req.iter() {
+            //dbg!(album.get("albumName").unwrap().to_string());
+            if album.get("albumName").unwrap().to_string() == format!("\"{}\"", album_name) {
+                found_album = true;
+                album_id = album.get("id").unwrap().as_str().replace("\"").unwrap();
             }
-        };
-        Ok(
-            Album {
+        }
+
+        if (found_album) {
+            println!("Found Album {} with ID: {}", album_name, album_id);
+            Ok(Album {
                 name: album_name,
-                id: album_id
-            }
-        )
+                id: album_id.to_string()
+            })
+        } else {
+            println!("Album not found, creating!");
+            let create_album_data = serde_json::json!({
+                "albumName": album_name,
+                "albumUsers": [{
+                    "userId": immich.clone().user_id,
+                    "role": "editor"
+                }]
+            });
+
+            let create_album_res = immich.client
+                .post(format!("{}/albums", immich.env_config.clone().get().base_url))
+                .header("x-api-key", immich.env_config.clone().get().api_key)
+                .json(&create_album_data)
+                .send()?
+                .text()?;
+
+            Ok(Album {
+                name: "".to_string(),
+                id: "".to_string()
+            })
+        }
     }
 }
 
