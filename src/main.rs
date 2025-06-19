@@ -46,7 +46,16 @@ fn main() {
             }
         }
         Commands::Upload { directory, album_name, camera_model } => {
-            dbg!(immich::Immich::new().unwrap().user_id);
+            match immich::Immich::new() {
+                Ok(immich) => {
+                    dbg!(immich.user_id);
+                    immich.get_album(album_name);
+                }
+                Err(err) => {
+                    println!("Error: {err}");
+                }
+            }
+            
         }
     }
 }
