@@ -19,7 +19,7 @@ impl Files {
             .filter_map(|res| res.ok())
             .map(|entry| entry.path())
             .filter_map(|path| {
-                if path.extension().map_or(false, |ext| ext == "PNG" || ext == "JPG" || ext == "JPEG") {
+                if path.extension().map_or(false, |ext| ext == "png" || ext == "jpg" || ext == "jpeg") {
                     Some(File {
                         name: path.clone().file_name()?.to_string_lossy().to_string(),
                         path:  path.clone(),
