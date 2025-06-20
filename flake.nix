@@ -25,6 +25,7 @@
             pkgs.openssl.dev
             pkgs.openssl.out
             pkgs.libexif
+            pkgs.scc
           ];
 
           # Ensure pkg-config can find OpenSSL and libexif

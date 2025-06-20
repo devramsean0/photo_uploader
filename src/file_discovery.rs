@@ -1,16 +1,16 @@
 use std::{fs::read_dir, path::PathBuf};
 
-#[derive(Debug)]
-struct File {
-    name: String,
-    path: PathBuf,
-    extension: String
+#[derive(Debug, Clone)]
+pub struct File {
+    pub name: String,
+    pub path: PathBuf,
+    pub extension: String
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Files {
     directory: String,
-    files: Vec<File>
+    pub files: Vec<File>
 }
 
 impl Files {
@@ -19,7 +19,7 @@ impl Files {
             .filter_map(|res| res.ok())
             .map(|entry| entry.path())
             .filter_map(|path| {
-                if path.extension().map_or(false, |ext| ext == "png" || ext == "jpg") {
+                if path.extension().map_or(false, |ext| ext == "PNG" || ext == "JPG" || ext == "JPEG") {
                     Some(File {
                         name: path.clone().file_name()?.to_string_lossy().to_string(),
                         path:  path.clone(),

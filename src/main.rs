@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 mod environment_config;
 mod immich;
 mod file_discovery;
+mod watermark;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -57,7 +58,11 @@ fn main() {
             }
             match file_discovery::Files::new(directory) {
                 Ok(files) => {
-                    dbg!(files);
+                    dbg!(files.clone());
+                    for file in files.files {
+                        println!("file");
+                        watermark::exif::Exif::extract(file.path);
+                    }
                 }
                 Err(err) => {
                     println!("Error: {err}");
