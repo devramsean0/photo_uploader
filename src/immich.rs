@@ -1,6 +1,6 @@
 use crate::environment_config;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Immich {
     client: reqwest::blocking::Client,
     env_config: environment_config::Config,
@@ -29,24 +29,30 @@ impl Immich {
             .json::<serde_json::Value>()?;
 
         //let json_user_req: ImmichGetMyUserResponse = serde_json::from_str(user_req.as_str())?;
-
         Ok(Immich {
             client,
             env_config,
-            user_id: user_req["id"].to_string(),
+            user_id: user_req["id"].to_string().replace("\"", ""),
             album: None
         })
     }
 
     pub fn get_album(mut self, album_name: String) -> Self {
-        self.album = Some(Album::new(self.clone(), album_name).unwrap());
+        match Album::new(self.clone(), album_name) {
+            Ok(album) => {
+                self.album = Some(album);
+            },
+            Err(err) => {
+                println!("Error {err}");
+            }
+        }
 
         self
     }
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Album {
     id: String,
     name: String,
@@ -87,13 +93,16 @@ impl Album {
                 }]
             });
 
+            //dbg!(create_album_data.clone());
+
             let create_album_res = immich.client
                 .post(format!("{}/albums", immich.env_config.clone().get().base_url))
                 .header("x-api-key", immich.env_config.clone().get().api_key)
                 .json(&create_album_data)
                 .send()?
                 .json::<serde_json::Value>()?;
-        
+
+            //dbg!(create_album_res.clone());
             Ok(Album {
                 name: album_name,
                 id: create_album_res["id"].to_string(),

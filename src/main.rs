@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 
 mod environment_config;
 mod immich;
+mod file_discovery;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -48,14 +49,20 @@ fn main() {
         Commands::Upload { directory, album_name, camera_model } => {
             match immich::Immich::new() {
                 Ok(immich) => {
-                    dbg!(immich.clone().user_id);
                     immich.get_album(album_name);
                 }
                 Err(err) => {
                     println!("Error: {err}");
                 }
             }
-            
+            match file_discovery::Files::new(directory) {
+                Ok(files) => {
+                    dbg!(files);
+                }
+                Err(err) => {
+                    println!("Error: {err}");
+                }
+            }
         }
     }
 }
