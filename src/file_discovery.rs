@@ -4,13 +4,13 @@ use std::{fs::read_dir, path::PathBuf};
 pub struct File {
     pub name: String,
     pub path: PathBuf,
-    pub extension: String
+    pub extension: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct Files {
     directory: String,
-    pub files: Vec<File>
+    pub files: Vec<File>,
 }
 
 impl Files {
@@ -19,11 +19,14 @@ impl Files {
             .filter_map(|res| res.ok())
             .map(|entry| entry.path())
             .filter_map(|path| {
-                if path.extension().map_or(false, |ext| ext == "png" || ext == "jpg" || ext == "jpeg") {
+                if path
+                    .extension()
+                    .map_or(false, |ext| ext == "png" || ext == "jpg" || ext == "jpeg")
+                {
                     Some(File {
                         name: path.clone().file_name()?.to_string_lossy().to_string(),
-                        path:  path.clone(),
-                        extension: path.extension()?.to_string_lossy().to_string()
+                        path: path.clone(),
+                        extension: path.extension()?.to_string_lossy().to_string(),
                     })
                 } else {
                     None
@@ -32,7 +35,7 @@ impl Files {
             .collect::<Vec<File>>();
         Ok(Files {
             directory: directory,
-            files: files
+            files: files,
         })
     }
 }
