@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 pub struct Exif {
     camera_name: Option<String>,
     date: Option<String>,
-    time: Option<String>
+    time: Option<String>,
 }
 
 impl Exif {
@@ -18,7 +18,7 @@ impl Exif {
         Ok(Exif {
             camera_name: None,
             date: None,
-            time: None
+            time: None,
         })
     }
 }
