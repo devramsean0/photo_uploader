@@ -54,13 +54,13 @@ jobs:
     - name: Push Changes
       run: |
         git tag -a ${{ inputs.version }} -m "Automated Release ${{ inputs.version}}"
-        git push --tags
-    - name: Create Release'
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ inputs.version }}
-        name: CLI release ${{ inputs.version }}
-        draft: true
+      #  git push --tags
+    # - name: Create Release'
+    #  uses: ncipollo/release-action@v1
+    #  with:
+    #    tag: ${{ inputs.version }}
+    #    name: CLI release ${{ inputs.version }}
+    #    draft: true
   build-release:
     needs: setup-release
     strategy:
@@ -99,7 +99,7 @@ jobs:
     - name: Set up Native Deps (MacOS)
       if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
       run: |
-        bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
         echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
         brew install libexif pkg-config
     - name: Setup Rust Toolchain
