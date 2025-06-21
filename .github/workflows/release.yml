@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: 'Version to release as'
+        required: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  sanity-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Native Deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libssl-dev libexif-dev pkg-config
+    - uses: actions/checkout@v4
+    - name: Download Build Cache
+      uses: actions/cache@v4.2.3
+      with:
+        path: target/
+        key: release-sanitybuild-rs-build-cache
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+  setup-release:
+    needs: sanity-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Bump Cargo Version
+      run: |
+        current_version=$(grep '^version = ' "Cargo.toml" | head -n1 | cut -d '"' -f2)
+        echo "Changing version from $current_version to ${{ inputs.version}}"
+        sed -i "s/^version  = \".*\"/version = \"${{ inputs.version }}\"/" "Cargo.toml"
+    - name: Format Project
+      run: cargo fmt --all -- --write
+    - name: Commit Changes
+      run: |
+        git config --local user.name "Sean's Automation[bot]"
+        git config --local user.email "automation@sean.cyou"
+        git add --all
+        git commit -m "[SKIP-CI] Prepare release ${{ inputs.version }}"
+    - name: Push Changes
+      run: |
+        git tag -a ${{ inputs.version }} -m "Automated Release ${{ inputs.version}}"
+        git push --tags
+    - name: Create Release'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ inputs.version }}
+        name: CLI release ${{ inputs.version }}
+        draft: true
+  build-release:
+    needs: setup-release
+    strategy:
+      matrix:
+        os:
+        - ubuntu-24.04
+        - windows-latest
+        - ubuntu-24.04-arm
+        - windows-11-arm
+        - macos-13
+        - macos-latest
+        arch:
+          - x64
+          - arm64
+        exclude:
+          - os: windows-latest
+            arch: arm64
+          - os: windows-11-arm
+            arch: x64
+          - os: ubuntu-24.04
+            arch: arm64
+          - os: ubuntu-24.04-arm
+            arch: x64
+          - os: macos-13
+            arch: arm64
+          - os: macos-latest
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Native Deps
+      if: matrix.os == 'ubuntu-24.04' || matrix.os == 'ubuntu-24.04-arm'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libssl-dev libexif-dev pkg-config
+    - name: Download Build Cache
+      uses: actions/cache@v4.2.3
+      with:
+        path: target/
+        key: release-build-${{ matrix.os }}-rs-build-cache
+    - name: Build
+      run: cargo build --release
+    - name: Change File Name
+      run: |
+        if [["${{ matrix.os }}" = "windows-latest"] || ["${{matrix.os}}" = "windows-11-arm"]] then
+          mv target/release/photo_uploader.exe target/release/photo_uploader-${{ inputs.version }}-${{ matrix.arch }}.exe
+        elif [["${{ matrix.os }}" = "ubuntu-24.04"] || ["${{matrix.os}}" = "ubuntu1-24.04-arm"]] then
+          mv target/release/photo_uploader target/release/photo_uploader-${{ inputs.version }}-${{ matrix.arch }}
+        elif [["${{ matrix.os }}" = "macos-latest"] || ["${{matrix.os}}" = "macos-13"]] then
+          mv target/release/photo_uploader target/release/photo_uploader-${{ inputs.version }}-${{ matrix.arch }}
+        fi
