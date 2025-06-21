@@ -1,4 +1,5 @@
 use crate::environment_config;
+use log::{info, error};
 
 #[derive(Clone, Debug)]
 pub struct Immich {
@@ -16,7 +17,7 @@ impl Immich {
                 env_config = config
             }
             Err(err) => {
-                println!("Error when loading the config: {err}");
+                error!("Error when loading the config: {err}");
                 std::process::exit(1);
             }
         }
@@ -43,7 +44,7 @@ impl Immich {
                 self.album = Some(album);
             },
             Err(err) => {
-                println!("Error {err}");
+                error!("Error getting the album: {err}");
             }
         }
 
@@ -78,13 +79,13 @@ impl Album {
         }
 
         if found_album {
-            println!("Found Album {} with ID: {}", album_name, album_id);
+            info!("Found Album {} with ID: {}", album_name, album_id);
             Ok(Album {
                 name: album_name,
                 id: album_id.to_string()
             })
         } else {
-            println!("Album not found, creating!");
+            info!("Album not found, creating!");
             let create_album_data = serde_json::json!({
                 "albumName": album_name,
                 "albumUsers": [{

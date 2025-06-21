@@ -1,9 +1,33 @@
 use clap::{Parser, Subcommand};
+use simplelog::*;
+use log::{info, error, debug};
 
 mod environment_config;
 mod immich;
 mod file_discovery;
 mod watermark;
+
+
+// Selectively enable log levels based on debug enabled
+#[cfg(debug_assertions)]
+fn configure_logging() {
+    let _ = TermLogger::init(
+        LevelFilter::Debug,
+        Config::default(),
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    );
+}
+
+#[cfg(not(debug_assertions))]
+fn configure_logging() {
+    let _ = TermLogger::init(
+        LevelFilter::Info,
+        Config::default(),
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    );
+}
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -34,16 +58,16 @@ enum Commands {
 
 
 fn main() {
+    configure_logging();
     let args = Args::parse();
-
     match args.cmd {
         Commands::Config { base_url, api_key} => {
             match environment_config::Config::new(base_url, api_key) {
                 Ok(_) => {
-                    println!("Config successfully written!");
+                    info!("Config successfully written!");
                 }
-                Err(_) => {
-                    println!("Error writing config :(");
+                Err(err) => {
+                    error!("Error writing config: {err}");
                 }
             }
         }
@@ -53,19 +77,19 @@ fn main() {
                     immich.get_album(album_name);
                 }
                 Err(err) => {
-                    println!("Error: {err}");
+                    error!("Error connecting to immich: {err}");
                 }
             }
             match file_discovery::Files::new(directory) {
                 Ok(files) => {
-                    dbg!(files.clone());
+                    debug!("{:#?}", files.clone());
                     for file in files.files {
-                        println!("file");
+                        debug!("Processing file: {}", file.path.to_string_lossy().to_string());
                         watermark::exif::Exif::extract(file.path);
                     }
                 }
                 Err(err) => {
-                    println!("Error: {err}");
+                    error!("Error discovering files: {err}");
                 }
             }
         }

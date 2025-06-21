@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Result as SerdeResult;
 use std::fs::{write, read_to_string};
 use dirs::config_dir;
+use log::debug;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
@@ -18,7 +19,7 @@ impl Config {
         let string_config = serde_json::to_string(&config)?;
 
         let config_file = format!("{}/photo_uploader.json", config_dir().unwrap().display());
-        println!("Writing to {}", config_file);
+        debug!("Writing {:#?} to {}", string_config, config_file);
         write(config_file, string_config);
 
         Ok(config)
@@ -30,10 +31,9 @@ impl Config {
 
     pub fn load_from_file() -> Result<Config, std::io::Error> {
         let config_file = format!("{}/photo_uploader.json", config_dir().unwrap().display());
-        let data = read_to_string(config_file)?;
-
+        let data = read_to_string(config_file.clone())?;
         let json: Config = serde_json::from_str(data.as_str())?;
-
+        debug!("Reading {:#?} from {}", json, config_file);
         Ok(json)
     }
 }
