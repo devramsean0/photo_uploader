@@ -1,4 +1,4 @@
-name: CI
+name: Release
 
 on:
   workflow_dispatch:
@@ -36,6 +36,8 @@ jobs:
       contents: write
     steps:
     - uses: actions/checkout@v4
+    - name: Setup Rust Components
+      run: rustup component add --toolchain nightly-x86_64-unknown-linux-gnu rustfmt
     - name: Bump Cargo Version
       run: |
         current_version=$(grep '^version = ' "Cargo.toml" | head -n1 | cut -d '"' -f2)
