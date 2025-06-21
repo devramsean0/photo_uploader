@@ -44,7 +44,7 @@ jobs:
         echo "Changing version from $current_version to ${{ inputs.version}}"
         sed -i "s/^version  = \".*\"/version = \"${{ inputs.version }}\"/" "Cargo.toml"
     - name: Format Project
-      run: cargo fmt --all -- --write
+      run: cargo fmt --all
     - name: Commit Changes
       run: |
         git config --local user.name "Sean's Automation[bot]"
