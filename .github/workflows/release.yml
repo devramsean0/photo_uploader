@@ -95,18 +95,7 @@ jobs:
       if: matrix.os == 'ubuntu-24.04' || matrix.os == 'ubuntu-24.04-arm'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libssl-dev libexif-dev pkg-config
-    - name: Set up Native Deps (MacOS)
-      if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
-      run: |
-        curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-        brew install libexif pkg-config
-    - name: Set up Native Deps (Windows)
-      if: matrix.os == 'windows-latest' || matrix.os == 'windows-11-arm'
-      run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-        choco install pkgconfiglite --accept-license --yes
+        sudo apt-get install -y libssl-dev pkg-config
     - name: Setup Rust Toolchain
       if: matrix.os == 'windows-latest' || matrix.os == 'windows-11-arm'
       uses: actions-rust-lang/setup-rust-toolchain@v1

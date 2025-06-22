@@ -16,7 +16,7 @@ jobs:
     - name: Set up Native Deps
       run: |
         sudo apt-get update
-        sudo apt-get install -y libssl-dev libexif-dev pkg-config
+        sudo apt-get install -y libssl-dev pkg-config
     - uses: actions/checkout@v4
     - name: Download Build Cache
       uses: actions/cache@v4.2.3
@@ -24,6 +24,6 @@ jobs:
         path: target/
         key: ci-rs-build-cache
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test

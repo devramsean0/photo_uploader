@@ -24,7 +24,6 @@
             pkgs.pkg-config
             pkgs.openssl.dev
             pkgs.openssl.out
-            pkgs.libexif
             pkgs.scc
           ];
 
