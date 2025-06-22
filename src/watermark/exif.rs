@@ -3,11 +3,11 @@ use std::path::{Path, PathBuf};
 use exif::{Reader, Tag, In};
 use log::debug;
 
-
 pub struct Exif {
     pub model: Option<String>,
     pub datetime: Option<String>,
-    pub digitized_datetime: Option<String>
+    pub digitized_datetime: Option<String>,
+    pub orientation: Option<u32>
 }
 
 impl Exif {
@@ -21,7 +21,8 @@ impl Exif {
         let mut exif_struct = Exif {
             model: None,
             datetime: None,
-            digitized_datetime: None
+            digitized_datetime: None,
+            orientation: None
         };
 
         match exif.get_field(Tag::Model, In::PRIMARY) {
@@ -51,6 +52,16 @@ impl Exif {
             }
             None => {
                 debug!("Digitized DateTime is missing from exif")
+            }
+        }
+
+        match exif.get_field(Tag::Orientation, In::PRIMARY) {
+            Some(orientation) => {
+                exif_struct.orientation = Some(orientation.value.get_uint(0).unwrap());
+                debug!("Extracted orientation: {}", exif_struct.orientation.clone().unwrap());
+            }
+            None => {
+                debug!("orientation is missing from exif")
             }
         }
         //dbg!(file_path.to_string_lossy().to_string(), metadata.get_tag(&ExifTag::ImageHeight(vec![])).next());
