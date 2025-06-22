@@ -82,12 +82,21 @@ fn main() {
                     error!("Error connecting to immich: {err}");
                 }
             }
+
             match file_discovery::Files::new(directory) {
                 Ok(files) => {
                     debug!("{:#?}", files.clone());
+                    let engine = watermark::WatermarkEngine::new(camera_model);
                     for file in files.files {
                         info!("Processing file: {}", file.path.to_string_lossy().to_string());
-                        watermark::exif::Exif::extract(file.path);
+                        match watermark::exif::Exif::extract(file.path.clone()) {
+                            Ok(exif) => {
+                                engine.clone().process_image(file.path, exif);
+                            }
+                            Err(err) => {
+                                error!("Error processing image: {err}")
+                            }
+                        }
                     }
                 }
                 Err(err) => {

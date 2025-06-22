@@ -5,8 +5,9 @@ use log::debug;
 
 
 pub struct Exif {
-    model: Option<String>,
-    datetime: Option<String>,
+    pub model: Option<String>,
+    pub datetime: Option<String>,
+    pub digitized_datetime: Option<String>
 }
 
 impl Exif {
@@ -19,7 +20,8 @@ impl Exif {
 
         let mut exif_struct = Exif {
             model: None,
-            datetime: None
+            datetime: None,
+            digitized_datetime: None
         };
 
         match exif.get_field(Tag::Model, In::PRIMARY) {
@@ -39,6 +41,16 @@ impl Exif {
             }
             None => {
                 debug!("DateTime is missing from exif")
+            }
+        }
+
+        match exif.get_field(Tag::DateTimeDigitized, In::PRIMARY) {
+            Some(datetime) => {
+                exif_struct.digitized_datetime = Some(datetime.display_value().with_unit(&exif).to_string());
+                debug!("Extracted Digitized DateTime: {}", exif_struct.digitized_datetime.clone().unwrap());
+            }
+            None => {
+                debug!("Digitized DateTime is missing from exif")
             }
         }
         //dbg!(file_path.to_string_lossy().to_string(), metadata.get_tag(&ExifTag::ImageHeight(vec![])).next());
