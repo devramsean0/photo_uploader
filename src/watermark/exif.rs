@@ -1,18 +1,21 @@
+use exif::{In, Reader, Tag};
+use log::debug;
 use std::fs;
 use std::path::{Path, PathBuf};
-use exif::{Reader, Tag, In};
-use log::debug;
 
 pub struct Exif {
     pub model: Option<String>,
     pub datetime: Option<String>,
     pub digitized_datetime: Option<String>,
-    pub orientation: Option<u32>
+    pub orientation: Option<u32>,
 }
 
 impl Exif {
     pub fn extract(file_path: PathBuf) -> Result<Exif, Box<dyn std::error::Error>> {
-        debug!("Extracting exif data from {}", file_path.clone().to_string_lossy().to_string());
+        debug!(
+            "Extracting exif data from {}",
+            file_path.clone().to_string_lossy().to_string()
+        );
         let file = std::fs::File::open(file_path)?;
         let mut buffer_reader = std::io::BufReader::new(&file);
         let exif_reader = Reader::new();
@@ -22,13 +25,22 @@ impl Exif {
             model: None,
             datetime: None,
             digitized_datetime: None,
-            orientation: None
+            orientation: None,
         };
 
         match exif.get_field(Tag::Model, In::PRIMARY) {
             Some(model) => {
-                exif_struct.model = Some(model.display_value().with_unit(&exif).to_string().replace("\"",""));
-                debug!("Extracted Camera Model: {}", exif_struct.model.clone().unwrap());
+                exif_struct.model = Some(
+                    model
+                        .display_value()
+                        .with_unit(&exif)
+                        .to_string()
+                        .replace("\"", ""),
+                );
+                debug!(
+                    "Extracted Camera Model: {}",
+                    exif_struct.model.clone().unwrap()
+                );
             }
             None => {
                 debug!("Camera Model is missing from exif")
@@ -38,7 +50,10 @@ impl Exif {
         match exif.get_field(Tag::DateTimeOriginal, In::PRIMARY) {
             Some(datetime) => {
                 exif_struct.datetime = Some(datetime.display_value().with_unit(&exif).to_string());
-                debug!("Extracted DateTime: {}", exif_struct.datetime.clone().unwrap());
+                debug!(
+                    "Extracted DateTime: {}",
+                    exif_struct.datetime.clone().unwrap()
+                );
             }
             None => {
                 debug!("DateTime is missing from exif")
@@ -47,8 +62,12 @@ impl Exif {
 
         match exif.get_field(Tag::DateTimeDigitized, In::PRIMARY) {
             Some(datetime) => {
-                exif_struct.digitized_datetime = Some(datetime.display_value().with_unit(&exif).to_string());
-                debug!("Extracted Digitized DateTime: {}", exif_struct.digitized_datetime.clone().unwrap());
+                exif_struct.digitized_datetime =
+                    Some(datetime.display_value().with_unit(&exif).to_string());
+                debug!(
+                    "Extracted Digitized DateTime: {}",
+                    exif_struct.digitized_datetime.clone().unwrap()
+                );
             }
             None => {
                 debug!("Digitized DateTime is missing from exif")
@@ -58,7 +77,10 @@ impl Exif {
         match exif.get_field(Tag::Orientation, In::PRIMARY) {
             Some(orientation) => {
                 exif_struct.orientation = Some(orientation.value.get_uint(0).unwrap());
-                debug!("Extracted orientation: {}", exif_struct.orientation.clone().unwrap());
+                debug!(
+                    "Extracted orientation: {}",
+                    exif_struct.orientation.clone().unwrap()
+                );
             }
             None => {
                 debug!("orientation is missing from exif")

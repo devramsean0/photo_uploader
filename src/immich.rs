@@ -1,21 +1,19 @@
 use crate::environment_config;
-use log::{info, error};
+use log::{error, info};
 
 #[derive(Clone, Debug)]
 pub struct Immich {
     client: reqwest::blocking::Client,
     env_config: environment_config::Config,
     pub user_id: String,
-    pub album: Option<Album>
+    pub album: Option<Album>,
 }
 
 impl Immich {
     pub fn new() -> Result<Immich, Box<dyn std::error::Error>> {
         let env_config;
         match environment_config::Config::load_from_file() {
-            Ok(config) => {
-                env_config = config
-            }
+            Ok(config) => env_config = config,
             Err(err) => {
                 error!("Error when loading the config: {err}");
                 std::process::exit(1);
@@ -34,7 +32,7 @@ impl Immich {
             client,
             env_config,
             user_id: user_req["id"].to_string().replace("\"", ""),
-            album: None
+            album: None,
         })
     }
 
@@ -42,7 +40,7 @@ impl Immich {
         match Album::new(self.clone(), album_name) {
             Ok(album) => {
                 self.album = Some(album);
-            },
+            }
             Err(err) => {
                 error!("Error getting the album: {err}");
             }
@@ -52,18 +50,20 @@ impl Immich {
     }
 }
 
-
 #[derive(Clone, Debug)]
 pub struct Album {
     id: String,
     name: String,
 }
 
-
 impl Album {
     pub fn new(immich: Immich, album_name: String) -> Result<Album, Box<dyn std::error::Error>> {
-        let album_req = immich.client
-            .get(format!("{}/albums", immich.env_config.clone().get().base_url))
+        let album_req = immich
+            .client
+            .get(format!(
+                "{}/albums",
+                immich.env_config.clone().get().base_url
+            ))
             .header("x-api-key", immich.env_config.clone().get().api_key)
             .send()?
             .json::<Vec<serde_json::Value>>()?;
@@ -82,7 +82,7 @@ impl Album {
             info!("Found Album {} with ID: {}", album_name, album_id);
             Ok(Album {
                 name: album_name,
-                id: album_id.to_string()
+                id: album_id.to_string(),
             })
         } else {
             info!("Album not found, creating!");
@@ -96,8 +96,12 @@ impl Album {
 
             //dbg!(create_album_data.clone());
 
-            let create_album_res = immich.client
-                .post(format!("{}/albums", immich.env_config.clone().get().base_url))
+            let create_album_res = immich
+                .client
+                .post(format!(
+                    "{}/albums",
+                    immich.env_config.clone().get().base_url
+                ))
                 .header("x-api-key", immich.env_config.clone().get().api_key)
                 .json(&create_album_data)
                 .send()?
@@ -111,4 +115,3 @@ impl Album {
         }
     }
 }
-

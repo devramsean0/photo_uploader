@@ -1,21 +1,18 @@
-use serde::{Deserialize, Serialize};
-use serde_json::Result as SerdeResult;
-use std::fs::{write, read_to_string};
 use dirs::config_dir;
 use log::debug;
+use serde::{Deserialize, Serialize};
+use serde_json::Result as SerdeResult;
+use std::fs::{read_to_string, write};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub base_url: String,
-    pub api_key: String
+    pub api_key: String,
 }
 
 impl Config {
     pub fn new(base_url: String, api_key: String) -> SerdeResult<Config> {
-        let config = Config {
-            base_url,
-            api_key
-        };
+        let config = Config { base_url, api_key };
         let string_config = serde_json::to_string(&config)?;
 
         let config_file = format!("{}/photo_uploader.json", config_dir().unwrap().display());
