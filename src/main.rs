@@ -1,3 +1,5 @@
+extern crate exif;
+
 use clap::{Parser, Subcommand};
 use simplelog::*;
 use log::{info, error, debug};
@@ -84,7 +86,7 @@ fn main() {
                 Ok(files) => {
                     debug!("{:#?}", files.clone());
                     for file in files.files {
-                        debug!("Processing file: {}", file.path.to_string_lossy().to_string());
+                        info!("Processing file: {}", file.path.to_string_lossy().to_string());
                         watermark::exif::Exif::extract(file.path);
                     }
                 }
